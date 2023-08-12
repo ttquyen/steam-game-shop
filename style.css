@@ -13,8 +13,7 @@
   color: white;
   height: 100px;
 }
-.header-container .nav-bar {
-}
+
 .nav-bar ul {
   display: flex;
   margin: auto 20px;
@@ -85,7 +84,7 @@
   transition: color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
 }
 .nav-item:hover {
-  box-shadow: inset 150px 0 0 0 #2b677d;
+  box-shadow: inset 200px 0 0 0 #2b677d;
   color: white;
 }
 /* .nav-item:hover {
