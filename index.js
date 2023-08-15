@@ -3,19 +3,20 @@ const BASE_URL = "https://steam-api-mass.onrender.com";
 const NO_GAME_MATCHES = "Sorry...  There is no game matched.";
 let TOTAL_GENRES;
 let TOTAL_GAMES;
+const paginationLimit = 20;
+let CURRENT_PAGE = 1;
 
 const init = async () => {
   await renderGenreList({});
-  await renderGameList({ page: 1, limit: 20 });
+  await renderGameList({ page: CURRENT_PAGE, limit: paginationLimit });
+  await renderTagList({});
 };
 const addEventListenerForItem = (itemType) => {
   if (itemType === "game") {
     //Add EventListener for Game
     let gameItems = document.querySelectorAll(".item");
-    console.log(gameItems);
     for (let i = 0; i < gameItems.length; i++) {
       gameItems[i].addEventListener("click", () => {
-        console.log(gameItems[i].id);
         renderGameDetail({
           appid: gameItems[i].id,
         });
@@ -28,7 +29,7 @@ const addEventListenerForItem = (itemType) => {
     for (let i = 0; i < categoryItems.length; i++) {
       categoryItems[i].addEventListener("click", () => {
         renderGameList({
-          steamspy_tags: categoryItems[i].children[0].textContent,
+          genres: categoryItems[i].children[0].textContent,
         });
       });
     }
@@ -39,6 +40,15 @@ const addEventListenerForItem = (itemType) => {
       renderGenreList({ limit: TOTAL_GENRES });
     });
     return;
+  } else if (itemType === "tag") {
+    let tagItems = document.querySelectorAll(".tag-item");
+    for (let i = 0; i < tagItems.length; i++) {
+      tagItems[i].addEventListener("click", () => {
+        renderGameList({
+          steamspy_tags: tagItems[i].children[0].textContent,
+        });
+      });
+    }
   }
 };
 // http://127.0.0.1:5500/127.0.0.1/4000
@@ -46,7 +56,6 @@ const addEventListenerForItem = (itemType) => {
 const getGameList = async (params) => {
   try {
     const { q, steamspy_tags, page, limit, genres } = params;
-    console.log(params);
     let queryString = "";
     if (q) {
       queryString += `&q=${q}`;
@@ -60,7 +69,7 @@ const getGameList = async (params) => {
     if (limit) {
       queryString += `&limit=${limit}`;
     } else {
-      queryString += `&limit=20`;
+      queryString += `&limit=${paginationLimit}`;
     }
     if (genres) {
       queryString += `&genres=${genres}`;
@@ -69,10 +78,9 @@ const getGameList = async (params) => {
     const res = await fetch(
       `${BASE_URL}/games${`?` + queryString.substring(1)}`
     );
-    const gamesList = await res.json();
+    const gameList = await res.json();
 
-    console.log("gamesList", gamesList);
-    return gamesList;
+    return gameList;
   } catch (e) {
     console.log("error", e.message);
   }
@@ -94,7 +102,6 @@ const getGenreList = async (params) => {
     );
     const genresList = await res.json();
     TOTAL_GENRES = genresList.total;
-    console.log("genresList", genresList);
     return genresList;
   } catch (e) {
     console.log("error", e.message);
@@ -115,7 +122,6 @@ const getTagList = async (params) => {
     const res = await fetch(`${BASE_URL}/steamspy-tags${queryString}`);
     const tagsList = await res.json();
 
-    console.log("tagsList", tagsList["data"]);
     return tagsList;
   } catch (e) {
     console.log("error", e.message);
@@ -128,8 +134,6 @@ const getSingleGameDetail = async (params) => {
     const res = await fetch(`${BASE_URL}/single-game/${appid}`);
     const gameDetail = await res.json();
 
-    console.log("gameDetail", gameDetail["data"]);
-
     return gameDetail;
   } catch (e) {
     console.log("error", e.message);
@@ -138,57 +142,77 @@ const getSingleGameDetail = async (params) => {
 
 /* render */
 const renderGenreList = async (params) => {
-  const genresListElm = document.querySelector("#genres-list");
-  console.log(genresListElm);
-  const ulGenresList = genresListElm.children[0];
-  ulGenresList.innerHTML = "";
+  const genreListElm = document.querySelector("#genres-list");
+  const ulGenreList = genreListElm.children[0];
+  ulGenreList.innerHTML = "";
   //call api
-  const genresList = await getGenreList(params);
-  // const genresList = { ...ALL_GENRES }.data;
-  genresList.data.forEach((g) => {
+  const genreList = await getGenreList(params);
+  genreList.data.forEach((g) => {
     const li = document.createElement("li");
     li.className = "genre-item";
     li.innerHTML = `
         <a href="#" class="nav-item ">${g.name}</a>
       `;
-    ulGenresList.appendChild(li);
+    ulGenreList.appendChild(li);
   });
 
   addEventListenerForItem("genre");
 };
-const renderGameList = async (params) => {
-  const gamesListElm = document.querySelector("#games-list");
-  gamesListElm.innerHTML = "";
-  const gamesList = await getGameList(params);
-  // console.log(gamesList);
-  if (gamesList.data.length === 0) {
-    gamesListElm.innerHTML = NO_GAME_MATCHES;
-    return;
-  }
-  gamesList.data.forEach((g) => {
-    const col = document.createElement("div");
-    col.className = "col";
-    col.innerHTML = `<div class="item"  id="${g.appid}">
-      <img src=${g.header_image} alt="aaa" />
-      <div class="info">
-        <div class="detail">
-          <p>${g.price === 0 ? "FREE" : `$${g.price}`}</p>
-          <h3>${g.name}</h3>
-        </div>
-      </div>
-  </div>`;
-    gamesListElm.appendChild(col);
+const renderTagList = async (params) => {
+  const tagListElm = document.querySelector("#tag-list");
+  const ulTagList = tagListElm.children[0];
+  ulTagList.innerHTML = "";
+  //call api
+  const tagList = await getTagList(params);
+  tagList.data.forEach((t) => {
+    const li = document.createElement("li");
+    li.className = "tag-item";
+    li.innerHTML = `
+        <a href="#" ">${t.name}</a>
+      `;
+    ulTagList.appendChild(li);
   });
-  addEventListenerForItem("game");
+
+  addEventListenerForItem("tag");
+};
+const renderGameList = async (params) => {
+  const pagination = document.querySelector(".pagination-container");
+  pagination.style.display = "flex";
+  const gameListElm = document.querySelector("#games-list");
+  gameListElm.innerHTML = "";
+  const gameList = await getGameList(params);
+  if (gameList.data.length === 0) {
+    gameListElm.innerHTML = NO_GAME_MATCHES;
+    return;
+  } else {
+    gameList.data.forEach((g) => {
+      const col = document.createElement("div");
+      col.className = "col";
+      col.innerHTML = `<div class="item"  id="${g.appid}">
+        <img src=${g.header_image} alt="aaa" />
+        <div class="info">
+          <div class="detail">
+            <p>${g.price === 0 ? "FREE" : `$${g.price}`}</p>
+            <h3>${g.name}</h3>
+          </div>
+        </div>
+    </div>`;
+      gameListElm.appendChild(col);
+    });
+    addEventListenerForItem("game");
+  }
+  //update total
+  TOTAL_GAMES = gameList.total;
+
+  renderPagination(gameList.page);
+  return;
 };
 
 const renderGameDetail = async (params) => {
-  console.log(params);
-  const gamesListElm = document.querySelector("#games-list");
-  gamesListElm.innerHTML = "";
-  gamesListElm.classList.remove("col");
+  const gameListElm = document.querySelector("#games-list");
+  gameListElm.innerHTML = "";
+  gameListElm.classList.remove("col");
   const gameDetail = await getSingleGameDetail(params);
-  console.log(gameDetail);
   const {
     name,
     description,
@@ -198,11 +222,7 @@ const renderGameDetail = async (params) => {
     negative_ratings,
     release_date,
     price,
-    platforms,
     header_image,
-    categories,
-    background,
-    appid,
   } = gameDetail.data;
 
   const col = document.createElement("div");
@@ -211,9 +231,8 @@ const renderGameDetail = async (params) => {
       <img src=${header_image} alt="header_img" />
       <h2 class="title">${name}</h2>
       <div class="info">
-        <h3 class="price">$${price}</h3>
+        <h3 class="price">${price === 0 ? "FREE" : `$${price}`}</h3>
         <div class="detail">
-
           <p>Recent Review: <span>${
             Math.round(
               (positive_ratings / (negative_ratings + positive_ratings)) * 100
@@ -224,12 +243,11 @@ const renderGameDetail = async (params) => {
           </br>
           <p class="description"><span>${description}</span></p>
         </div>
-
       </div>
-      
   </div>`;
-  gamesListElm.appendChild(col);
-
+  gameListElm.appendChild(col);
+  const pagination = document.querySelector(".pagination-container");
+  pagination.style.display = "none";
   const relatedTags = document.createElement("div");
   relatedTags.className = "related-tags";
   col.appendChild(relatedTags);
@@ -241,7 +259,8 @@ const renderGameDetail = async (params) => {
     relatedTags.appendChild(tagElm);
   });
 };
-init();
+
+//handle search bar
 const inputSearch = document.querySelector("#search-box");
 inputSearch.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
@@ -253,3 +272,90 @@ const iconSearch = document.querySelector("#search-icon");
 iconSearch.addEventListener("click", () => {
   renderGameList({ q: document.querySelector("#search-box").value });
 });
+
+const renderPagination = (currentPage) => {
+  const pageCount = Math.ceil(TOTAL_GAMES / paginationLimit);
+  //HANDLE NEXT-PREV BUTTON
+  const prevArrowElm = document.getElementById("prev-arrow");
+  prevArrowElm.innerHTML = `<button class="pagination-arrow-button" id="prev-button">
+  &lt;
+</button>`;
+  const nextArrowElm = document.getElementById("next-arrow");
+  nextArrowElm.innerHTML = `<button class="pagination-arrow-button" id="next-button">
+  &gt;
+</button>`;
+  const prevButton = prevArrowElm.children[0];
+  const nextButton = nextArrowElm.children[0];
+  nextButton.disabled = currentPage === pageCount;
+  prevButton.disabled = currentPage === 1;
+
+  nextButton.addEventListener("click", (e) => {
+    renderGameList({ page: currentPage + 1 });
+  });
+  prevButton.addEventListener("click", (e) => {
+    renderGameList({ page: currentPage - 1 });
+  });
+
+  //RENDER NUMBER
+  renderPaginationNumber(pageCount, currentPage);
+};
+const renderPaginationNumber = (count, currPage) => {
+  const paginatedList = document.getElementById("paginated-list");
+  //HOT TO DISPLAY NUMBER
+  paginatedList.innerHTML = "";
+  if (count <= 4) {
+    for (let i = 1; i <= 4; i++) {
+      const liNum = document.createElement("li");
+      liNum.innerHTML = `<button class="pagination-button">${i}</button>`;
+      if (currPage === i) {
+        liNum.children[0].classList.add("active");
+      }
+      paginatedList.appendChild(liNum);
+    }
+  } else if (count > 4) {
+    for (let i = 1; i <= 3; i++) {
+      const liNum = document.createElement("li");
+      liNum.innerHTML = `<button class="pagination-button">${i}</button>`;
+      if (currPage === i) {
+        liNum.children[0].classList.add("active");
+      }
+      paginatedList.appendChild(liNum);
+    }
+    const threeDotsPrev = document.createElement("li");
+    threeDotsPrev.innerHTML = `<button class="pagination-button ">...</button>`;
+    threeDotsPrev.children[0].disabled = true;
+    paginatedList.appendChild(threeDotsPrev);
+
+    //handle active current in the middle
+    if (currPage >= 4 && currPage < count - 2) {
+      paginatedList.removeChild(paginatedList.children[2]);
+      const tmpCurrPage = document.createElement("li");
+      tmpCurrPage.innerHTML = `<button class="pagination-button active">${currPage}</button>`;
+      paginatedList.appendChild(tmpCurrPage);
+      const threeDotsPost = document.createElement("li");
+      threeDotsPost.innerHTML = `<button class="pagination-button">...</button>`;
+      threeDotsPost.children[0].disabled = true;
+      paginatedList.appendChild(threeDotsPost);
+    }
+    //handle after threeDots
+    for (let i = count - 1; i <= count; i++) {
+      const liNum = document.createElement("li");
+      liNum.innerHTML = `<button class="pagination-button">${i}</button>`;
+      if (currPage === i) {
+        liNum.children[0].classList.add("active");
+      }
+      paginatedList.appendChild(liNum);
+    }
+  }
+  //HANDLE CLICK NUMBERS
+  const paginationNumberList =
+    paginatedList.querySelectorAll(".pagination-button");
+  paginationNumberList.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currPage = +btn.textContent;
+      renderGameList({ page: currPage });
+    });
+  });
+  return;
+};
+init();
