@@ -1,4 +1,3 @@
-// import * as mockupData from "/mockupData.js";
 const BASE_URL = "https://steam-api-mass.onrender.com";
 const NO_GAME_MATCHES = "Sorry...  There is no game matched.";
 let TOTAL_GENRES;
@@ -33,7 +32,7 @@ const addEventListenerForItem = (itemType) => {
         });
       });
     }
-    //Load more
+    //Load more button
     const btnLoadMoreCategory = document.querySelector("#more-category");
     btnLoadMoreCategory.addEventListener("click", () => {
       btnLoadMoreCategory.style.display = "none";
@@ -49,10 +48,10 @@ const addEventListenerForItem = (itemType) => {
         });
       });
     }
+    return;
   }
 };
-// http://127.0.0.1:5500/127.0.0.1/4000
-// http://127.0.0.1:5500/appid=440
+
 const getGameList = async (params) => {
   try {
     const { q, steamspy_tags, page, limit, genres } = params;
@@ -85,48 +84,50 @@ const getGameList = async (params) => {
     console.log("error", e.message);
   }
 };
+
 const getGenreList = async (params) => {
   try {
     const { page, limit } = params;
     let queryString = "";
-
     if (page) {
       queryString += `&page=${page}`;
     }
     if (limit) {
       queryString += `&limit=${limit}`;
     }
-
     const res = await fetch(
       `${BASE_URL}/genres${`?` + queryString.substring(1)}`
     );
-    const genresList = await res.json();
-    TOTAL_GENRES = genresList.total;
-    return genresList;
+    const genreList = await res.json();
+    TOTAL_GENRES = genreList.total; //update total genres
+
+    return genreList;
   } catch (e) {
     console.log("error", e.message);
   }
 };
+
 const getTagList = async (params) => {
   try {
     const { page, limit } = params;
     let queryString = "";
-
     if (page) {
       queryString += `&page=${page}`;
     }
     if (limit) {
       queryString += `&limit=${limit}`;
     }
+    const res = await fetch(
+      `${BASE_URL}/steamspy-tags${`?` + queryString.substring(1)}`
+    );
+    const tagList = await res.json();
 
-    const res = await fetch(`${BASE_URL}/steamspy-tags${queryString}`);
-    const tagsList = await res.json();
-
-    return tagsList;
+    return tagList;
   } catch (e) {
     console.log("error", e.message);
   }
 };
+
 const getSingleGameDetail = async (params) => {
   try {
     const { appid } = params;
@@ -144,8 +145,8 @@ const getSingleGameDetail = async (params) => {
 const renderGenreList = async (params) => {
   const genreListElm = document.querySelector("#genres-list");
   const ulGenreList = genreListElm.children[0];
-  ulGenreList.innerHTML = "";
-  //call api
+  ulGenreList.innerHTML = ""; //clear all the current genres in list
+
   const genreList = await getGenreList(params);
   genreList.data.forEach((g) => {
     const li = document.createElement("li");
@@ -155,13 +156,14 @@ const renderGenreList = async (params) => {
       `;
     ulGenreList.appendChild(li);
   });
-
+  //add event listener
   addEventListenerForItem("genre");
 };
+
 const renderTagList = async (params) => {
   const tagListElm = document.querySelector("#tag-list");
   const ulTagList = tagListElm.children[0];
-  ulTagList.innerHTML = "";
+  ulTagList.innerHTML = ""; //clear all the current tags in list
   //call api
   const tagList = await getTagList(params);
   tagList.data.forEach((t) => {
@@ -172,14 +174,16 @@ const renderTagList = async (params) => {
       `;
     ulTagList.appendChild(li);
   });
-
+  //add event listener
   addEventListenerForItem("tag");
 };
 const renderGameList = async (params) => {
   const pagination = document.querySelector(".pagination-container");
   pagination.style.display = "flex";
+
   const gameListElm = document.querySelector("#games-list");
   gameListElm.innerHTML = "";
+
   const gameList = await getGameList(params);
   if (gameList.data.length === 0) {
     gameListElm.innerHTML = NO_GAME_MATCHES;
@@ -246,18 +250,19 @@ const renderGameDetail = async (params) => {
       </div>
   </div>`;
   gameListElm.appendChild(col);
-  const pagination = document.querySelector(".pagination-container");
-  pagination.style.display = "none";
+
   const relatedTags = document.createElement("div");
   relatedTags.className = "related-tags";
   col.appendChild(relatedTags);
   steamspy_tags.forEach((tag) => {
     const tagElm = document.createElement("a");
-
     tagElm.innerHTML = tag;
     tagElm.setAttribute("href", "#");
     relatedTags.appendChild(tagElm);
   });
+  //hide pagination
+  const pagination = document.querySelector(".pagination-container");
+  pagination.style.display = "none";
 };
 
 //handle search bar
@@ -269,7 +274,8 @@ inputSearch.addEventListener("keypress", (e) => {
   }
 });
 const iconSearch = document.querySelector("#search-icon");
-iconSearch.addEventListener("click", () => {
+iconSearch.addEventListener("click", (e) => {
+  e.preventDefault();
   renderGameList({ q: document.querySelector("#search-box").value });
 });
 
@@ -303,8 +309,9 @@ const renderPaginationNumber = (count, currPage) => {
   const paginatedList = document.getElementById("paginated-list");
   //HOT TO DISPLAY NUMBER
   paginatedList.innerHTML = "";
-  if (count <= 4) {
-    for (let i = 1; i <= 4; i++) {
+  if (count <= 5) {
+    //render all pages
+    for (let i = 1; i <= count; i++) {
       const liNum = document.createElement("li");
       liNum.innerHTML = `<button class="pagination-button">${i}</button>`;
       if (currPage === i) {
@@ -321,21 +328,30 @@ const renderPaginationNumber = (count, currPage) => {
       }
       paginatedList.appendChild(liNum);
     }
+
     const threeDotsPrev = document.createElement("li");
     threeDotsPrev.innerHTML = `<button class="pagination-button ">...</button>`;
     threeDotsPrev.children[0].disabled = true;
     paginatedList.appendChild(threeDotsPrev);
 
     //handle active current in the middle
-    if (currPage >= 4 && currPage < count - 2) {
-      paginatedList.removeChild(paginatedList.children[2]);
-      const tmpCurrPage = document.createElement("li");
-      tmpCurrPage.innerHTML = `<button class="pagination-button active">${currPage}</button>`;
-      paginatedList.appendChild(tmpCurrPage);
-      const threeDotsPost = document.createElement("li");
-      threeDotsPost.innerHTML = `<button class="pagination-button">...</button>`;
-      threeDotsPost.children[0].disabled = true;
-      paginatedList.appendChild(threeDotsPost);
+    if (currPage >= 4) {
+      if (currPage < count - 2) {
+        paginatedList.removeChild(paginatedList.children[2]);
+        const tmpCurrPage = document.createElement("li");
+        tmpCurrPage.innerHTML = `<button class="pagination-button active">${currPage}</button>`;
+        paginatedList.appendChild(tmpCurrPage);
+        const threeDotsPost = document.createElement("li");
+        threeDotsPost.innerHTML = `<button class="pagination-button">...</button>`;
+        threeDotsPost.children[0].disabled = true;
+        paginatedList.appendChild(threeDotsPost);
+      } else if (currPage > count - 2) {
+        paginatedList.removeChild(paginatedList.children[2]);
+      } else {
+        const tmpCurrPage = document.createElement("li");
+        tmpCurrPage.innerHTML = `<button class="pagination-button active">${currPage}</button>`;
+        paginatedList.appendChild(tmpCurrPage);
+      }
     }
     //handle after threeDots
     for (let i = count - 1; i <= count; i++) {

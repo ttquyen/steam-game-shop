@@ -7,7 +7,6 @@
   margin: 0;
 }
 main {
-  /* height: calc(100vh - 50px); */
   overflow-y: hidden;
   overflow-x: hidden;
 }
@@ -19,7 +18,6 @@ main {
   color: white;
   height: 50px;
 }
-
 .nav-bar ul {
   display: flex;
   margin: auto 20px;
@@ -63,7 +61,6 @@ main {
   position: relative;
 }
 #search-box {
-  /* display: inline-block; */
   width: 100%;
   height: 36px;
   margin: 10px auto;
@@ -83,8 +80,6 @@ main {
 }
 .filter-container .nav-bar ul {
   flex-direction: column;
-  /* scroll-behavior: auto; */
-  /* overflow-y: scroll; */
 }
 .nav-item {
   box-shadow: inset 0 0 0 0 #54b3d6;
@@ -97,9 +92,6 @@ main {
   box-shadow: inset 250px 0 0 0 #2b677d;
   color: white;
 }
-/* .nav-item:hover {
-  color: red;
-} */
 .categories {
   margin-top: 20px;
 }
@@ -133,7 +125,6 @@ main {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  /* margin: 0 -15px; */
 }
 
 .main .row .col {
@@ -144,8 +135,6 @@ main {
 @media screen and (max-width: 800px) {
   .main .row .col {
     width: calc(100% / 3);
-    /* padding: 0 10px;
-    margin-bottom: 10px; */
   }
 }
 @media screen and (max-width: 500px) {
@@ -153,13 +142,9 @@ main {
     width: calc(100% / 2);
   }
 }
-/* để đảm bảo chiều rộng hình bằng item, 
-không tràn ra 
-!!!QUAN TRỌNG LUÔN PHẢI LÀM VỚI HÌNH*/
 .main .row .col .item img {
   width: 100%;
   filter: contrast(70%);
-  /* filter: grayscale(100%) contrast(50%); */
   display: block;
 }
 .main .item {
@@ -187,16 +172,12 @@ không tràn ra
   transition: all 0.5s;
   cursor: pointer;
 }
-
 .main .item .info .detail {
   padding: 5px;
   transition: all 0.5s;
-
-  /* thay thế cho position */
   transform: translate(0, 30px);
 }
 .main .item:hover .info .detail {
-  /* top: 0; */
   transform: translate(0px, 10px);
 }
 .main .item .info .detail p {
@@ -205,7 +186,6 @@ không tràn ra
 .main .item .info .detail h3 {
   color: #ffffff;
 }
-
 .game-detail {
   padding: 30px;
   background-color: #2b475e;
@@ -224,7 +204,6 @@ không tràn ra
 .game-detail .title {
   color: aliceblue;
 }
-
 .game-detail .info {
   text-align: left;
   color: white;
@@ -290,10 +269,8 @@ không tràn ra
 .pagination .pagination-arrow-button:not(.disabled):hover {
   background-color: #2b475e;
 }
-
 li button.active {
   color: rgb(113, 137, 210) !important;
   font-weight: 700 !important;
-  font-size: 2px !important;
-  /* padding-bottom: 10px !important; */
+  font-size: 22px !important;
 }
