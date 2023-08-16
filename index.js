@@ -54,28 +54,13 @@ const addEventListenerForItem = (itemType) => {
 
 const getGameList = async (params) => {
   try {
-    const { q, steamspy_tags, page, limit, genres } = params;
-    let queryString = "";
-    if (q) {
-      queryString += `&q=${q}`;
-    }
-    if (steamspy_tags) {
-      queryString += `&steamspy_tags=${steamspy_tags}`;
-    }
-    if (page) {
-      queryString += `&page=${page}`;
-    }
-    if (limit) {
-      queryString += `&limit=${limit}`;
-    } else {
-      queryString += `&limit=${paginationLimit}`;
-    }
-    if (genres) {
-      queryString += `&genres=${genres}`;
+    const searchParams = new URLSearchParams(params);
+    if (!searchParams.limit) {
+      searchParams.append("limit", `${paginationLimit}`);
     }
 
     const res = await fetch(
-      `${BASE_URL}/games${`?` + queryString.substring(1)}`
+      `${BASE_URL}/games${`?` + searchParams.toString()}`
     );
     const gameList = await res.json();
 
@@ -87,16 +72,10 @@ const getGameList = async (params) => {
 
 const getGenreList = async (params) => {
   try {
-    const { page, limit } = params;
-    let queryString = "";
-    if (page) {
-      queryString += `&page=${page}`;
-    }
-    if (limit) {
-      queryString += `&limit=${limit}`;
-    }
+    const searchParams = new URLSearchParams(params);
+
     const res = await fetch(
-      `${BASE_URL}/genres${`?` + queryString.substring(1)}`
+      `${BASE_URL}/genres${`?` + searchParams.toString()}`
     );
     const genreList = await res.json();
     TOTAL_GENRES = genreList.total; //update total genres
@@ -109,16 +88,13 @@ const getGenreList = async (params) => {
 
 const getTagList = async (params) => {
   try {
-    const { page, limit } = params;
-    let queryString = "";
-    if (page) {
-      queryString += `&page=${page}`;
+    const searchParams = new URLSearchParams(params);
+    if (!searchParams.limit) {
+      searchParams.append("limit", `${paginationLimit}`);
     }
-    if (limit) {
-      queryString += `&limit=${limit}`;
-    }
+
     const res = await fetch(
-      `${BASE_URL}/steamspy-tags${`?` + queryString.substring(1)}`
+      `${BASE_URL}/steamspy-tags${`?` + searchParams.toString()}`
     );
     const tagList = await res.json();
 
