@@ -89,9 +89,6 @@ const getGenreList = async (params) => {
 const getTagList = async (params) => {
   try {
     const searchParams = new URLSearchParams(params);
-    if (!searchParams.limit) {
-      searchParams.append("limit", `${paginationLimit}`);
-    }
 
     const res = await fetch(
       `${BASE_URL}/steamspy-tags${`?` + searchParams.toString()}`
