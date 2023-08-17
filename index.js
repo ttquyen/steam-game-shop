@@ -4,6 +4,9 @@ let TOTAL_GENRES;
 let TOTAL_GAMES;
 const paginationLimit = 20;
 let CURRENT_PAGE = 1;
+// let SELECTED_CATEGORY;
+// let SELECTED_TAG;
+// let SELECTED_Q;
 
 const init = async () => {
   await renderGenreList({});
@@ -171,6 +174,7 @@ const renderGameList = async (params) => {
   showLoadingPage(false);
   if (gameList.data.length === 0) {
     gameListElm.innerHTML = NO_GAME_MATCHES;
+    gameListElm.style.color = "white";
     return;
   } else {
     gameList.data.forEach((g) => {
