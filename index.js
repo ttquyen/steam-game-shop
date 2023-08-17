@@ -13,7 +13,9 @@ const init = async () => {
 
 // init;
 document.addEventListener("DOMContentLoaded", init);
-
+const showLoadingPage = (isShow) => {
+  document.getElementById("loader").style.display = isShow ? "block" : "none";
+};
 const addEventListenerForItem = (itemType) => {
   if (itemType === "game") {
     //Add EventListener for Game
@@ -123,8 +125,9 @@ const renderGenreList = async (params) => {
   const genreListElm = document.querySelector("#genres-list");
   const ulGenreList = genreListElm.children[0];
   ulGenreList.innerHTML = ""; //clear all the current genres in list
-
+  showLoadingPage(true);
   const genreList = await getGenreList(params);
+  showLoadingPage(false);
   genreList.data.forEach((g) => {
     const li = document.createElement("li");
     li.className = "genre-item";
@@ -142,7 +145,9 @@ const renderTagList = async (params) => {
   const ulTagList = tagListElm.children[0];
   ulTagList.innerHTML = ""; //clear all the current tags in list
   //call api
+  showLoadingPage(true);
   const tagList = await getTagList(params);
+  showLoadingPage(false);
   tagList.data.forEach((t) => {
     const li = document.createElement("li");
     li.className = "tag-item";
@@ -160,8 +165,10 @@ const renderGameList = async (params) => {
 
   const gameListElm = document.querySelector("#games-list");
   gameListElm.innerHTML = "";
+  showLoadingPage(true);
 
   const gameList = await getGameList(params);
+  showLoadingPage(false);
   if (gameList.data.length === 0) {
     gameListElm.innerHTML = NO_GAME_MATCHES;
     return;
