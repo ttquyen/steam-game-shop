@@ -10,6 +10,10 @@ const init = async () => {
   await renderGameList({ page: CURRENT_PAGE, limit: paginationLimit });
   await renderTagList({});
 };
+
+// init;
+document.addEventListener("DOMContentLoaded", init);
+
 const addEventListenerForItem = (itemType) => {
   if (itemType === "game") {
     //Add EventListener for Game
@@ -347,4 +351,3 @@ const renderPaginationNumber = (count, currPage) => {
   });
   return;
 };
-init();
