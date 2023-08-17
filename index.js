@@ -264,7 +264,8 @@ inputSearch.addEventListener("keypress", (e) => {
 const iconSearch = document.querySelector("#search-icon");
 iconSearch.addEventListener("click", (e) => {
   e.preventDefault();
-  renderGameList({ q: document.querySelector("#search-box").value });
+  renderGameList({ q: inputSearch.value });
+  inputSearch.value = "";
 });
 
 const renderPagination = (currentPage) => {
