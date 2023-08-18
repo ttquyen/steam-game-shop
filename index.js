@@ -1,16 +1,18 @@
 const BASE_URL = "https://steam-api-mass.onrender.com";
 const NO_GAME_MATCHES = "Sorry...  There is no game matched.";
-let TOTAL_GENRES;
-let TOTAL_GAMES;
-const paginationLimit = 20;
-let CURRENT_PAGE = 1;
-// let SELECTED_CATEGORY;
-// let SELECTED_TAG;
-// let SELECTED_Q;
+const LIMIT = 20;
+let total_genres;
+let total_games;
+let current_page = 1;
+let selected_category = "";
+let selected_tag = "";
+let selected_q = "";
+let tag_list;
+let genre_list;
 
 const init = async () => {
   await renderGenreList({});
-  await renderGameList({ page: CURRENT_PAGE, limit: paginationLimit });
+  await renderGameList({ page: current_page, limit: LIMIT });
   await renderTagList({});
 };
 
@@ -36,25 +38,29 @@ const addEventListenerForItem = (itemType) => {
     let categoryItems = document.querySelectorAll(".genre-item");
     for (let i = 0; i < categoryItems.length; i++) {
       categoryItems[i].addEventListener("click", () => {
+        selected_category = categoryItems[i].children[0].textContent;
         renderGameList({
-          genres: categoryItems[i].children[0].textContent,
+          genres: selected_category,
         });
+        renderGenre(genre_list.data);
       });
     }
     //Load more button
     const btnLoadMoreCategory = document.querySelector("#more-category");
     btnLoadMoreCategory.addEventListener("click", () => {
       btnLoadMoreCategory.style.display = "none";
-      renderGenreList({ limit: TOTAL_GENRES });
+      renderGenreList({ limit: total_genres });
     });
     return;
   } else if (itemType === "tag") {
     let tagItems = document.querySelectorAll(".tag-item");
     for (let i = 0; i < tagItems.length; i++) {
       tagItems[i].addEventListener("click", () => {
+        selected_tag = tagItems[i].children[0].textContent;
         renderGameList({
-          steamspy_tags: tagItems[i].children[0].textContent,
+          steamspy_tags: selected_tag,
         });
+        renderTag(tag_list.data);
       });
     }
     return;
@@ -64,10 +70,19 @@ const addEventListenerForItem = (itemType) => {
 const getGameList = async (params) => {
   try {
     const searchParams = new URLSearchParams(params);
-    if (!searchParams.limit) {
-      searchParams.append("limit", `${paginationLimit}`);
+    if (!searchParams.get("limit")) {
+      searchParams.append("limit", `${LIMIT}`);
     }
-
+    if (selected_category && !searchParams.get("genres")) {
+      searchParams.append("genres", selected_category);
+    }
+    if (selected_q && !searchParams.get("q")) {
+      searchParams.append("q", selected_q);
+    }
+    if (selected_tag && !searchParams.get("steamspy_tags")) {
+      console.log(searchParams);
+      searchParams.append("steamspy_tags", selected_tag);
+    }
     const res = await fetch(
       `${BASE_URL}/games${`?` + searchParams.toString()}`
     );
@@ -87,7 +102,7 @@ const getGenreList = async (params) => {
       `${BASE_URL}/genres${`?` + searchParams.toString()}`
     );
     const genreList = await res.json();
-    TOTAL_GENRES = genreList.total; //update total genres
+    total_genres = genreList.total; //update total genres
 
     return genreList;
   } catch (e) {
@@ -125,18 +140,25 @@ const getSingleGameDetail = async (params) => {
 
 /* render */
 const renderGenreList = async (params) => {
-  const genreListElm = document.querySelector("#genres-list");
-  const ulGenreList = genreListElm.children[0];
-  ulGenreList.innerHTML = ""; //clear all the current genres in list
+  //clear all the current genres in list
   showLoadingPage(true);
   const genreList = await getGenreList(params);
   showLoadingPage(false);
-  genreList.data.forEach((g) => {
+  genre_list = { ...genreList };
+  renderGenre(genreList.data);
+};
+const renderGenre = (listData) => {
+  const genreListElm = document.querySelector("#genres-list");
+  const ulGenreList = genreListElm.children[0];
+  ulGenreList.innerHTML = "";
+  listData.forEach((g) => {
     const li = document.createElement("li");
     li.className = "genre-item";
     li.innerHTML = `
-        <a href="#" class="nav-item ">${g.name}</a>
-      `;
+      <a href="#" class="nav-item ${
+        g.name === selected_category ? "active" : ""
+      } ">${g.name}</a>
+    `;
     ulGenreList.appendChild(li);
   });
   //add event listener
@@ -144,18 +166,25 @@ const renderGenreList = async (params) => {
 };
 
 const renderTagList = async (params) => {
-  const tagListElm = document.querySelector("#tag-list");
-  const ulTagList = tagListElm.children[0];
-  ulTagList.innerHTML = ""; //clear all the current tags in list
   //call api
   showLoadingPage(true);
   const tagList = await getTagList(params);
   showLoadingPage(false);
-  tagList.data.forEach((t) => {
+  tag_list = { ...tagList };
+  renderTag(tagList.data);
+  return;
+};
+const renderTag = (listData) => {
+  const tagListElm = document.querySelector("#tag-list");
+  const ulTagList = tagListElm.children[0];
+  ulTagList.innerHTML = ""; //clear all the current tags in list
+  listData.forEach((t) => {
     const li = document.createElement("li");
     li.className = "tag-item";
     li.innerHTML = `
-        <a href="#" ">${t.name}</a>
+        <a href="#" ${t.name === selected_tag ? "class='active'" : ""}>${
+      t.name
+    }</a>
       `;
     ulTagList.appendChild(li);
   });
@@ -194,7 +223,7 @@ const renderGameList = async (params) => {
     addEventListenerForItem("game");
   }
   //update total
-  TOTAL_GAMES = gameList.total;
+  total_games = gameList.total;
 
   renderPagination(gameList.page);
   return;
@@ -264,12 +293,13 @@ inputSearch.addEventListener("keypress", (e) => {
 const iconSearch = document.querySelector("#search-icon");
 iconSearch.addEventListener("click", (e) => {
   e.preventDefault();
-  renderGameList({ q: inputSearch.value });
-  inputSearch.value = "";
+  selected_q = inputSearch.value;
+  renderGameList({ q: selected_q });
+  // inputSearch.value = "";  do not need to clear
 });
 
 const renderPagination = (currentPage) => {
-  const pageCount = Math.ceil(TOTAL_GAMES / paginationLimit);
+  const pageCount = Math.ceil(total_games / LIMIT);
   //HANDLE NEXT-PREV BUTTON
   const prevArrowElm = document.getElementById("prev-arrow");
   prevArrowElm.innerHTML = `<button class="pagination-arrow-button" id="prev-button">

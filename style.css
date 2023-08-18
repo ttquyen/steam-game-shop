@@ -92,6 +92,9 @@ main {
   box-shadow: inset 250px 0 0 0 #2b677d;
   color: white;
 }
+.nav-item.active {
+  background-color: #54b3d6;
+}
 .categories {
   margin-top: 20px;
 }
@@ -231,6 +234,10 @@ main {
   margin: 10px 10px 10px 0px;
   color: #d0c7c8;
   border-radius: 4px;
+}
+.tag-item a:hover,
+.tag-item a.active {
+  background-color: #2b677d;
 }
 .tag-item {
   display: inline-block;
